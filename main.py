@@ -5,6 +5,7 @@ import time
 from collections import deque
 
 import gym
+import gym_roos
 import numpy as np
 import torch
 import torch.nn as nn
@@ -18,6 +19,25 @@ from a2c_ppo_acktr.envs import make_vec_envs
 from a2c_ppo_acktr.model import Policy
 from a2c_ppo_acktr.storage import RolloutStorage
 from evaluation import evaluate
+
+import pdb
+
+# python main.py --env-name "PongNoFrameskip-v4" \
+# --algo ppo \
+# --use-gae \
+# --lr 2.5e-4 \
+# --clip-param 0.1 \
+# --value-loss-coef 0.5 \
+# --num-processes 2 \
+# --num-steps 128 \
+# --num-mini-batch 4 \
+# --log-interval 1 \
+# --use-linear-lr-decay \
+# --entropy-coef 0.01 \
+# --num-env-steps 5000000 \
+# --recurrent-policy \
+# --gamma 0.99 \
+# --model-name /home/mroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/SaccadeDigit-v0_C100_L100_F000_S000.pt
 
 
 def main():
@@ -41,10 +61,16 @@ def main():
     envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
 
-    actor_critic = Policy(
-        envs.observation_space.shape,
-        envs.action_space,
-        base_kwargs={'recurrent': args.recurrent_policy})
+    if args.model_name is None:
+        actor_critic = Policy(
+            envs.observation_space.shape,
+            envs.action_space,
+            base_kwargs={'recurrent': args.recurrent_policy, 'hidden_size': 256})
+    else:
+        actor_critic, ob_rms = torch.load(args.model_name)
+        vec_norm = utils.get_vec_normalize(envs)
+        if vec_norm is not None:
+            vec_norm.ob_rms = ob_rms
     actor_critic.to(device)
 
     if args.algo == 'a2c':
@@ -177,9 +203,11 @@ def main():
             total_num_steps = (j + 1) * args.num_processes * args.num_steps
             end = time.time()
             print(
-                "Updates {}, num timesteps {}, FPS {} \n Last {} training episodes: mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}\n"
-                .format(j, total_num_steps,
+                "Updates {}, num timesteps {}/{}, steps per sec {}, total minutes {:0.1f}\n\tLast {} training episodes: mean/median reward {:.1f}/{:.1f}, min/max reward {:.1f}/{:.1f}\n"
+                .format(j,
+                        total_num_steps, args.num_env_steps,
                         int(total_num_steps / (end - start)),
+                        (end - start)/60,
                         len(episode_rewards), np.mean(episode_rewards),
                         np.median(episode_rewards), np.min(episode_rewards),
                         np.max(episode_rewards), dist_entropy, value_loss,

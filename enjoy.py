@@ -6,8 +6,12 @@ import sys
 import numpy as np
 import torch
 
+import gym_roos
+
 from a2c_ppo_acktr.envs import VecPyTorch, make_vec_envs
 from a2c_ppo_acktr.utils import get_render_func, get_vec_normalize
+
+import pdb
 
 sys.path.append('a2c_ppo_acktr')
 
@@ -22,11 +26,15 @@ parser.add_argument(
 parser.add_argument(
     '--env-name',
     default='PongNoFrameskip-v4',
-    help='environment to train on (default: PongNoFrameskip-v4)')
+    help='environment to use (default: PongNoFrameskip-v4)')
 parser.add_argument(
     '--load-dir',
     default='./trained_models/',
     help='directory to save agent logs (default: ./trained_models/)')
+parser.add_argument(
+    '--model-name',
+    default='PongNoFrameskip-v4',
+    help='based model filename (default: PongNoFrameskip-v4)')
 parser.add_argument(
     '--non-det',
     action='store_true',
@@ -50,7 +58,9 @@ render_func = get_render_func(env)
 
 # We need to use the same statistics for normalization as used in training
 actor_critic, ob_rms = \
-            torch.load(os.path.join(args.load_dir, args.env_name + ".pt"))
+            torch.load(os.path.join(args.load_dir, args.model_name + ".pt"))
+            # torch.load(os.path.join(args.load_dir, args.env_name + ".pt"))
+actor_critic.to('cpu')
 
 vec_norm = get_vec_normalize(env)
 if vec_norm is not None:
@@ -81,6 +91,7 @@ while True:
 
     # Obser reward and next obs
     obs, reward, done, _ = env.step(action)
+    print('done = %s' % done[0])
 
     masks.fill_(0.0 if done else 1.0)
 
@@ -91,5 +102,8 @@ while True:
             humanPos, humanOrn = p.getBasePositionAndOrientation(torsoId)
             p.resetDebugVisualizerCamera(distance, yaw, -20, humanPos)
 
-    if render_func is not None:
-        render_func('human')
+    # if render_func is not None:
+    #     render_func('human')
+    #     # a = np.argmax(action[0][0:3])
+    #     # print('a=%d, r=%0.2f, d=%s' % (a, reward, done))
+    #     # pdb.set_trace()

@@ -149,6 +149,11 @@ def get_args():
         action='store_true',
         default=False,
         help='use a linear schedule on the learning rate')
+    parser.add_argument(
+        '--model-name',
+        # action='store_true',
+        default=None,
+        help='load an existing model for further training')
     args = parser.parse_args()
 
     args.cuda = not args.no_cuda and torch.cuda.is_available()
