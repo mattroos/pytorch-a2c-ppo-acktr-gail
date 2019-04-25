@@ -22,22 +22,42 @@ from evaluation import evaluate
 
 import pdb
 
-# python main.py --env-name "PongNoFrameskip-v4" \
+# python main.py --env-name "SaccadeMultDigits-v0" \
 # --algo ppo \
 # --use-gae \
 # --lr 2.5e-4 \
 # --clip-param 0.1 \
 # --value-loss-coef 0.5 \
-# --num-processes 2 \
-# --num-steps 128 \
+# --num-processes 4 \
 # --num-mini-batch 4 \
+# --num-steps 128 \
 # --log-interval 1 \
 # --use-linear-lr-decay \
 # --entropy-coef 0.01 \
 # --num-env-steps 5000000 \
 # --recurrent-policy \
 # --gamma 0.99 \
-# --model-name /home/mroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/SaccadeDigit-v0_C100_L100_F000_S000.pt
+
+# python main.py --env-name "SaccadeDigit-v0" \
+# python main.py --env-name "SaccadeMultDigits-v0" \
+'''
+python main.py --env-name "SaccadeMultDigits-v0" \
+--algo ppo \
+--use-gae \
+--lr 2.5e-4 \
+--clip-param 0.1 \
+--value-loss-coef 0.5 \
+--num-processes 4 \
+--num-mini-batch 4 \
+--num-steps 128 \
+--log-interval 1 \
+--use-linear-lr-decay \
+--entropy-coef 0.01 \
+--num-env-steps 5000000 \
+--recurrent-policy \
+--gamma 0.99 \
+--model-name /Users/mattroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/MultiDigits/SaccadeMultDigits-one_digit.pt
+'''
 
 
 def main():
