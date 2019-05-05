@@ -18,6 +18,8 @@ if len(sys.argv) > 2:
     metric = sys.argv[2]
 else:
     metric = 'r'
+if metric not in ['r', 'l']:
+    raise Exception('Unknown metric "%s" in .csv file.' % (metric))
 
 if len(sys.argv) > 3:
     dir_files = sys.argv[3]
@@ -79,14 +81,22 @@ if k_group > 1:
 # plt.ylim(0, 200)
 plt.grid(True)
 plt.xlabel('Evaluation Number')
-plt.ylabel('Total Reward')
+if metric=='r':
+    plt.ylabel('Total Reward')
+elif metric=='l':
+    plt.ylabel('Total Number of Steps')
 timestamp = os.path.getmtime(list_filenames[0])
 date_time = time.strftime("%x %X", time.localtime(timestamp))
 plt.title('SaccadeDigit-v0 Learning, %s' % (date_time))
 
 
 # Draw histogram of score distributions for first P% and last P%
-n_bins = 100
+# n_bins = 100
+if metric=='r':
+    n_bins = np.arange(-5,515,10)
+    # n_bins = np.arange(-50,555,100)
+elif metric=='l':
+    n_bins = np.arange(-0.5,20,1)
 plt.figure(2)
 ax1 = plt.subplot(2,1,1)
 ax1.hist(D1, bins=n_bins, density=True)
