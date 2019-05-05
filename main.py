@@ -53,12 +53,11 @@ python main.py --env-name "SaccadeMultDigits-v0" \
 --log-interval 1 \
 --use-linear-lr-decay \
 --entropy-coef 0.01 \
---num-env-steps 5000000 \
+--num-env-steps 10000000 \
 --recurrent-policy \
 --gamma 0.99 \
---model-name /Users/mattroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/MultiDigits/SaccadeMultDigits-one_digit.pt
+--model-name /home/mroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/MultDigits/SaccadeMultDigits-v0_09764.pt
 '''
-
 
 def main():
     args = get_args()
@@ -81,13 +80,23 @@ def main():
     envs = make_vec_envs(args.env_name, args.seed, args.num_processes,
                          args.gamma, args.log_dir, device, False)
 
+
+    optimizer = None
+    num_updates_done = 0
     if args.model_name is None:
         actor_critic = Policy(
             envs.observation_space.shape,
             envs.action_space,
             base_kwargs={'recurrent': args.recurrent_policy, 'hidden_size': 256})
     else:
-        actor_critic, ob_rms = torch.load(args.model_name)
+        # actor_critic, ob_rms = torch.load(args.model_name)
+        # actor_critic, ob_rms, optimizer, num_updates_done = torch.load(args.model_name)
+        stuff = torch.load(args.model_name)
+        if len(stuff)==2:
+            actor_critic, ob_rms = stuff
+        elif len(stuff)==4:
+            actor_critic, ob_rms, optimizer, num_updates_done = stuff
+        del stuff
         vec_norm = utils.get_vec_normalize(envs)
         if vec_norm is not None:
             vec_norm.ob_rms = ob_rms
@@ -116,6 +125,9 @@ def main():
     elif args.algo == 'acktr':
         agent = algo.A2C_ACKTR(
             actor_critic, args.value_loss_coef, args.entropy_coef, acktr=True)
+
+    if optimizer is not None:
+        agent.optimizer = optimizer
 
     if args.gail:
         assert len(envs.observation_space.shape) == 1
@@ -146,7 +158,9 @@ def main():
     start = time.time()
     num_updates = int(
         args.num_env_steps) // args.num_steps // args.num_processes
-    for j in range(num_updates):
+
+    # for j in range(num_updates):
+    for j in range(num_updates_done, num_updates):
 
         if args.use_linear_lr_decay:
             # decrease learning rate linearly
@@ -216,8 +230,10 @@ def main():
 
             torch.save([
                 actor_critic,
-                getattr(utils.get_vec_normalize(envs), 'ob_rms', None)
-            ], os.path.join(save_path, args.env_name + ".pt"))
+                getattr(utils.get_vec_normalize(envs), 'ob_rms', None),
+                agent.optimizer,
+                j
+            ], os.path.join(save_path, args.env_name + '_%05d'%(j) + ".pt"))
 
         if j % args.log_interval == 0 and len(episode_rewards) > 1:
             total_num_steps = (j + 1) * args.num_processes * args.num_steps
