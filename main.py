@@ -17,6 +17,7 @@ from a2c_ppo_acktr.algo import gail
 from a2c_ppo_acktr.arguments import get_args
 from a2c_ppo_acktr.envs import make_vec_envs
 from a2c_ppo_acktr.model import Policy
+from a2c_ppo_acktr.model import GlimpseBase
 from a2c_ppo_acktr.storage import RolloutStorage
 from evaluation import evaluate
 
@@ -47,16 +48,16 @@ python main.py --env-name "SaccadeMultDigits-v0" \
 --lr 2.5e-4 \
 --clip-param 0.1 \
 --value-loss-coef 0.5 \
---num-processes 4 \
---num-mini-batch 4 \
---num-steps 128 \
+--num-processes 5 \
+--num-mini-batch 1 \
+--num-steps 17 \
 --log-interval 1 \
 --use-linear-lr-decay \
 --entropy-coef 0.01 \
---num-env-steps 10000000 \
---recurrent-policy \
+--num-env-steps 30000000 \
 --gamma 0.99 \
---model-name /home/mroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/MultDigits/SaccadeMultDigits-v0_09764.pt
+--recurrent-policy \
+--model-name /home/mroos/Code/pytorch-a2c-ppo-acktr-gail/trained_models/ppo/MultDigits/SaccadeMultDigits-v0_36500.pt
 '''
 
 def main():
@@ -87,6 +88,7 @@ def main():
         actor_critic = Policy(
             envs.observation_space.shape,
             envs.action_space,
+            # base=GlimpseBase,
             base_kwargs={'recurrent': args.recurrent_policy, 'hidden_size': 256})
     else:
         # actor_critic, ob_rms = torch.load(args.model_name)
