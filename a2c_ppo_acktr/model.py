@@ -122,10 +122,6 @@ class NNBase(nn.Module):
             x = x.squeeze(0)
             hxs = hxs.squeeze(0)
         else:
-            print(x.shape)
-            print(hxs.shape)
-            print(masks.shape)
-            print('\n')
             # x is a (T, N, -1) tensor that has been flatten to (T * N, -1)
             N = hxs.size(0)
             T = int(x.size(0) / N)
